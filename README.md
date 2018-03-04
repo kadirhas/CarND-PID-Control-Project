@@ -1,6 +1,8 @@
 # CarND-Controls-PID
 Self-Driving Car Engineer Nanodegree Program
 
+This is the 4th project of the second term on Udacity Self-Driving Car Engineer Nanodegree Program. In this project, a PID controller is implemented to keep the car on the track.
+
 ---
 
 ## Dependencies
@@ -35,64 +37,14 @@ There's an experimental patch for windows in this [PR](https://github.com/udacit
 3. Compile: `cmake .. && make`
 4. Run it: `./pid`. 
 
-Tips for setting up your environment can be found [here](https://classroom.udacity.com/nanodegrees/nd013/parts/40f38239-66b6-46ec-ae68-03afd8a601c8/modules/0949fca6-b379-42af-a919-ee50aa304e6a/lessons/f758c44c-5e40-4e01-93b5-1a82aa4e044f/concepts/23d376c7-0195-4276-bdf0-e02f1f3c665d)
+## Discussion
 
-## Editor Settings
+### PID controller
+P parameter affects how the controller responds to the current error. It respons similar to the spring: if the error is higher, it "forces" the corrective input more. Derivative part of the controller contains information about future. It acts as a damper, since it does not respond a steady state error. This also means that D variable increases the steady state error and make the system more sluggish. Another problem is, if the error changes suddenly, it applies "impulse" as the force, since the derivative of a step is infinite. Usually a filter is applied to remove this effect, however on this project It was not necessary since the sensor is perfect and there was no sudden changes on the crosstrack error. Integrator variable sums up the all errors, it is about the "past" of the system. It removes the steady state error, and it can also remove the bias in the system if there is any. The downside is, it increases the oscillations. If there is a limit on the input of the system (such as maximum steering angle) it also creates a problem which is known as integrator wind up, but there are also many ways of deal with this issue. 
+### Implementation
+On this project, the frequency of the control loop is assumed as constant. Because of that the time difference parameter is not seen on the I and D controllers. 
+There are two controllers for the vehicle, one for steering and another one for the throttle. First, the speed controller is tuned, then the lateral controller is implemented. Even though there are limits for both inputs, anti windup algorithms are not implemented because I is not used for the speed controller and the I term is relatively very small for the lateral controller. 
+### Tuning
+It is tuned manually since I am experienced with PID tuners. The speed controller is tuned very easily: a P controller with 0.5 was good enough. There is a small steady state error which can be removed via the I parameter. I didn't implemented it because it might create wind up problem and it is already satisfactory for the lateral control. For the lateral control tuning, first 0 is applied as the steering to see if there is any bias. It has been observed that there is a small bias towards right, which implies that I parameter should be used on the final controller for nonoscillating system. After applying 0.5 P controller, the vehicle was oscillating too much so I've started to increase the D parameter, while decreasing the P. Then I used very small I parameter. Then I've decided to increase the velocity of the vehicle. Since the PID controller does not have any information about the dynamics of the vehicle, the parameters should be tuned according to velocity for a more robust control. So I've decreased the P and increased D even more. The final parameters are:  [P,I,D] (0.11,0.0000001,4.0) for the lateral control and (0.5,0,0) for the speed control.
 
-We've purposefully kept editor configuration files out of this repo in order to
-keep it as simple and environment agnostic as possible. However, we recommend
-using the following settings:
-
-* indent using spaces
-* set tab width to 2 spaces (keeps the matrices in source code aligned)
-
-## Code Style
-
-Please (do your best to) stick to [Google's C++ style guide](https://google.github.io/styleguide/cppguide.html).
-
-## Project Instructions and Rubric
-
-Note: regardless of the changes you make, your project must be buildable using
-cmake and make!
-
-More information is only accessible by people who are already enrolled in Term 2
-of CarND. If you are enrolled, see [the project page](https://classroom.udacity.com/nanodegrees/nd013/parts/40f38239-66b6-46ec-ae68-03afd8a601c8/modules/f1820894-8322-4bb3-81aa-b26b3c6dcbaf/lessons/e8235395-22dd-4b87-88e0-d108c5e5bbf4/concepts/6a4d8d42-6a04-4aa6-b284-1697c0fd6562)
-for instructions and the project rubric.
-
-## Hints!
-
-* You don't have to follow this directory structure, but if you do, your work
-  will span all of the .cpp files here. Keep an eye out for TODOs.
-
-## Call for IDE Profiles Pull Requests
-
-Help your fellow students!
-
-We decided to create Makefiles with cmake to keep this project as platform
-agnostic as possible. Similarly, we omitted IDE profiles in order to we ensure
-that students don't feel pressured to use one IDE or another.
-
-However! I'd love to help people get up and running with their IDEs of choice.
-If you've created a profile for an IDE that you think other students would
-appreciate, we'd love to have you add the requisite profile files and
-instructions to ide_profiles/. For example if you wanted to add a VS Code
-profile, you'd add:
-
-* /ide_profiles/vscode/.vscode
-* /ide_profiles/vscode/README.md
-
-The README should explain what the profile does, how to take advantage of it,
-and how to install it.
-
-Frankly, I've never been involved in a project with multiple IDE profiles
-before. I believe the best way to handle this would be to keep them out of the
-repo root to avoid clutter. My expectation is that most profiles will include
-instructions to copy files to a new location to get picked up by the IDE, but
-that's just a guess.
-
-One last note here: regardless of the IDE used, every submitted project must
-still be compilable with cmake and make./
-
-## How to write a README
-A well written README file can enhance your project and portfolio.  Develop your abilities to create professional README files by completing [this free course](https://www.udacity.com/course/writing-readmes--ud777).
 
